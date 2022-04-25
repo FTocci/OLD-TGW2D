@@ -1,5 +1,5 @@
 ---
-title: "**Topological gift wrapping 2D**"
+**Topological gift wrapping 2D**
 ---
 
 *Identificazione del problema*
