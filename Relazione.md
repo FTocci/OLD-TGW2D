@@ -40,7 +40,7 @@ Figura 1 : Estrazione di 1 ciclo minimale
 
 Per ogni elemento (1-scheletro) calcolo *il bordo* ottenendo i due vertici, per ciascun vertice calcolo il cobordo, ovvero individuo gli altri elementi (1-scheletro) con un vertice coincidente (questo passaggio viene effettuato tramite valori matriciali). A questo punto si isolano due elementi tra quelli individuati formando così una catena e si ripete l’algoritmo sugli elementi della catena appena calcolata. L’obiettivo di ciascuna iterazione è quello di individuare una porzione nel piano (ovvero la 1-catena di bordo)Figura 1.
 
-1. **ILLUSTRAZIONE DELLO PSEUDOCODICE**
+ **1.1.1 ILLUSTRAZIONE DELLO PSEUDOCODICE**
 
 Lo pseudocodice in Figura 2 è il riassunto dell’algoritmo TGW in uno spazio generico di D-dimensionale.
 
@@ -49,8 +49,8 @@ L’algoritmo prende in input una matrice sparsa di dimensioni “m×n” e rest
 ![Pseudocodice](/images/Pseudocode.png)
 Figura 2: pseudocodice
 
-1. **FUNZIONI INTERNE PRINCIPALI**
-   1. **PLANAR ARRANGEMENT**
+ **1.2 FUNZIONI INTERNE PRINCIPALI**
+   **1.2.1 PLANAR ARRANGEMENT**
 
 ![PlanarArrangement1](/images/PlanarArrangement1.png)
 ![PlanarArrangement2](/images/PlanarArrangement2.png)
