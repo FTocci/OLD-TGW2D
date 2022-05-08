@@ -47,9 +47,11 @@ Lo pseudocodice in Figura 2 è il riassunto dell’algoritmo TGW in uno spazio g
 L’algoritmo prende in input una matrice sparsa di dimensioni “m×n” e restituisce una matrice dal dominio delle D-catene a quello dei (d-1) cicli orientati.
 
 ![Pseudocodice](/images/Pseudocode.png)
+
 Figura 2: pseudocodice
 
  **1.2 FUNZIONI INTERNE PRINCIPALI**
+ 
    **1.2.1 PLANAR ARRANGEMENT**
 
 ![PlanarArrangement1](/images/PlanarArrangement1.png)
