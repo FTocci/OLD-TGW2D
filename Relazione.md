@@ -46,25 +46,29 @@ Lo pseudocodice in Figura 2 è il riassunto dell’algoritmo TGW in uno spazio g
 
 L’algoritmo prende in input una matrice sparsa di dimensioni “m×n” e restituisce una matrice dal dominio delle D-catene a quello dei (d-1) cicli orientati.
 
+![Pseudocodice](/images/Pseudocode.png)
 Figura 2: pseudocodice
 
 1. **FUNZIONI INTERNE PRINCIPALI**
    1. **PLANAR ARRANGEMENT**
 
-
+![PlanarArrangement1](/images/PlanarArrangement1.png)
+![PlanarArrangement2](/images/PlanarArrangement2.png)
 
 L’obiettivo è partizionare un complesso cellulare passato come parametro. Un complesso cellulare è partizionato quando l'intersezione di ogni possibile coppia di celle del complesso è vuota e l'unione di tutte le celle è l'intero spazio euclideo.
 
 **1.2.2 MERGE\_VERTICES**
 
-
-
+![MergeVertices1](/images/MergeVertices1.png)
+![MergeVertices2](/images/MergeVertices2.png)
 
 
 
 Si occupa di fondere vertici congruenti e bordi congruenti, assegnare a coppie di indici di vertici indici di bordo e costruire una mappa dei bordi.
 
 **1.2.3 FRAG\_EDGE**
+
+![FragEdge](/images/FragEdge.png)
 
 Si occupa della frammentazione dei bordi in EV usando l'indice spaziale bigPI.
 
