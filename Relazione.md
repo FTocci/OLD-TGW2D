@@ -54,7 +54,8 @@ Figura 2: pseudocodice
    **1.2.1 PLANAR ARRANGEMENT**
 
 ![PlanarArrangement1](/images/PlanarArrangement1.png)
-![PlanarArrangement2](/images/PlanarArrangement2.png)  Figura 3 : Codice Planar_arrangement
+![PlanarArrangement2](/images/PlanarArrangement2.png)  
+Figura 3 : Codice Planar_arrangement
 
 L’obiettivo è partizionare un complesso cellulare passato come parametro. Un complesso cellulare è partizionato quando l'intersezione di ogni possibile coppia di celle del complesso è vuota e l'unione di tutte le celle è l'intero spazio euclideo.
 
