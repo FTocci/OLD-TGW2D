@@ -19,7 +19,7 @@ Giacomo Scordino
 
 
 
-#**1 STUDIO PRELIMINARE**
+**1 STUDIO PRELIMINARE**
 
 Il topological gift wrapping è un algoritmo che produce un insieme di complessi di catene in 2D.
 
