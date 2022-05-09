@@ -41,7 +41,7 @@ Julia può inoltre generare codice nativo per GPU, risorsa che permette di abbat
 
 L’algoritmo è utilizzato localmente su 2-cella per essere decomposta, e invece utilizzato globalmente per generare le 3-celle della partizione dello spazio.
 
-![EstrazioneCicloMinimale](/images/CycleExtraction.png)
+![EstrazioneCicloMinimale](/images/CycleExtraction.png=250x400)
 Figura 1 : Estrazione di 1 ciclo minimale
 
 Per ogni elemento (1-scheletro) calcolo *il bordo* ottenendo i due vertici, per ciascun vertice calcolo il cobordo, ovvero individuo gli altri elementi (1-scheletro) con un vertice coincidente (questo passaggio viene effettuato tramite valori matriciali). A questo punto si isolano due elementi tra quelli individuati formando così una catena e si ripete l’algoritmo sugli elementi della catena appena calcolata. L’obiettivo di ciascuna iterazione è quello di individuare una porzione nel piano (ovvero la 1-catena di bordo)Figura 1.
