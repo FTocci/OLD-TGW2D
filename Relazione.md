@@ -19,27 +19,27 @@ Giacomo Scordino
 
 **Indice** 
 
-[Indice ........................................................................................................................................ 2 ](#_page1_x97.00_y85.92)
+[Indice ........................................................................................................................................ 2 ]
 
-[1  STUDIO PRELIMINARE ...................................................................................................... 3 ](#_page2_x97.00_y85.92)
+[1  STUDIO PRELIMINARE ...................................................................................................... 3 ]
 
-1.1 [IL LINGUAGGIO JULIA ............................................................................................... 3 ](#_page2_x143.00_y351.92)
+1.1 [IL LINGUAGGIO JULIA ............................................................................................... 3 ]
  
-1.2 [FUNZIONAMENTO .................................................................................................... 3 ](#_page2_x143.00_y534.92)
+1.2 [FUNZIONAMENTO .................................................................................................... 3 ]
 
-1.2.1  [ILLUSTRAZIONE DELLO PSEUDOCODICE .......................................................... 4 ](#_page3_x97.00_y205.92)
+1.2.1  [ILLUSTRAZIONE DELLO PSEUDOCODICE .......................................................... 4 ]
 
-1.3 [FUNZIONI INTERNE PRINCIPALI ................................................................................ 5 ](#_page4_x143.00_y85.92)
+1.3 [FUNZIONI INTERNE PRINCIPALI ................................................................................ 5 ]
 
-1.3.1 [PLANAR ARRANGEMENT .................................................................................. 5 ](#_page4_x97.00_y104.92)
+1.3.1 [PLANAR ARRANGEMENT .................................................................................. 5 ]
 
-1.3.2 [MERGE VERTICES .............................................................................................. 6 ](#_page5_x97.00_y85.92)
+1.3.2 [MERGE VERTICES .............................................................................................. 6 ]
 
-1.3.3 [FRAG EDGE ....................................................................................................... 6 ](#_page5_x97.00_y458.92)
+1.3.3 [FRAG EDGE ....................................................................................................... 6 ]
 
-1.4 [CONCLUSIONI PER FUTURA OTTIMIZZAZIONE ......................................................... 7 ](#_page6_x143.00_y85.92)
+1.4 [CONCLUSIONI PER FUTURA OTTIMIZZAZIONE ......................................................... 7 ]
 
-[BIBLIOGRAFIA ........................................................................................................................... 8 ](#_page7_x97.00_y85.92)
+[BIBLIOGRAFIA ........................................................................................................................... 8 ]
 
 
 
@@ -114,6 +114,7 @@ Analizzando il codice nel dettaglio, è possibile evidenziare che in alcuni pass
 Continuando l'analisi del codice ed osservando accuratamente le dipendenze presenti risulta opportuno implementare modifiche con l'obiettivo di migliorare scalabilità, modificabilità e prestazioni di porzioni dello stesso riducendo l'accoppiamento tra i moduli presenti fattorizzando il codice e continuando ad implementare forme di calcolo parallelo e distribuito. In particolare, alcune di queste modifiche dovranno coinvolgere il codice relativo alla funzione "*merge\_vertices!"*, presentata in precedenza. Infatti, ad essa sono assegnate numerose *task* che possono essere suddivise in diverse sotto funzioni.
 
 **BIBLIOGRAFIA**
+
 [1]: https://julialang.org/
 
 [2]: ACM-TSAS-2020 Section on Topological gift wrapping (TGW) in 2D in particular 2.3, 2.4 
