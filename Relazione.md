@@ -21,7 +21,7 @@ Giacomo Scordino
 
 [Indice ........................................................................................................................................ 2 ]
 
-[1  STUDIO PRELIMINARE ...................................................................................................... 3 ]
+1  [STUDIO PRELIMINARE ...................................................................................................... 3 ]
 
 1.1 [IL LINGUAGGIO JULIA ............................................................................................... 3 ]
  
@@ -115,7 +115,7 @@ Continuando l'analisi del codice ed osservando accuratamente le dipendenze prese
 
 **BIBLIOGRAFIA**
 
-[1]: https://julialang.org/
+[1]: [Documentazione Julia](https://julialang.org/)
 
 [2]: ACM-TSAS-2020 Section on Topological gift wrapping (TGW) in 2D in particular 2.3, 2.4 
 
