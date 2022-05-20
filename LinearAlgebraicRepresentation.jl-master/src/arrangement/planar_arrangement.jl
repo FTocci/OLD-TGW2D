@@ -125,7 +125,7 @@ function merge_vertices!(V::Lar.Points, EV::Lar.ChainOp, edge_map, err=1e-4)
     # merge congruent edges
     edges = Array{Tuple{Int, Int}, 1}(undef, edgenum)
     oedges = Array{Tuple{Int, Int}, 1}(undef, edgenum)
-    Thread.@threads for ei in 1:edgenum
+    Threads.@threads for ei in 1:edgenum
         v1, v2 = EV[ei, :].nzind
         edges[ei] = Tuple{Int, Int}(sort([newverts[v1], newverts[v2]]))
         oedges[ei] = Tuple{Int, Int}(sort([v1, v2]))
@@ -137,11 +137,11 @@ function merge_vertices!(V::Lar.Points, EV::Lar.ChainOp, edge_map, err=1e-4)
     # maps pairs of vertex indices to edge index
     etuple2idx = Dict{Tuple{Int, Int}, Int}()
     # builds `edge_map`
-    Thread.@threads for ei in 1:nedgenum
+    Threads.@threads for ei in 1:nedgenum
         nEV[ei, collect(nedges[ei])] .= 1
         etuple2idx[nedges[ei]] = ei
     end
-    Thread.@threads for i in 1:length(edge_map)
+    Threads.@threads for i in 1:length(edge_map)
         row = edge_map[i]
         row = map(x->edges[x], row)
         row = filter(t->t[1]!=t[2], row)
@@ -352,7 +352,7 @@ function cell_merging(n, containment_graph, V, EVs, boundaries, shells, shell_bb
     # initiolization
     sums = Array{Tuple{Int, Int, Int}}(undef, 0);
     # assembling child components with father components
-    for father in 1:n
+    Threads.@threads for father in 1:n
         if sum(containment_graph[:, father]) > 0
             father_bboxes = bboxes(V, abs.(EVs[father]')*abs.(boundaries[father]'))
             for child in 1:n
