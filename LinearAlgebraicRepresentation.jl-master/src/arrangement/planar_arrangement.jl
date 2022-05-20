@@ -125,7 +125,7 @@ function merge_vertices!(V::Lar.Points, EV::Lar.ChainOp, edge_map, err=1e-4)
     # merge congruent edges
     edges = Array{Tuple{Int, Int}, 1}(undef, edgenum)
     oedges = Array{Tuple{Int, Int}, 1}(undef, edgenum)
-    for ei in 1:edgenum
+    Thread.@threads for ei in 1:edgenum
         v1, v2 = EV[ei, :].nzind
         edges[ei] = Tuple{Int, Int}(sort([newverts[v1], newverts[v2]]))
         oedges[ei] = Tuple{Int, Int}(sort([v1, v2]))
@@ -137,11 +137,11 @@ function merge_vertices!(V::Lar.Points, EV::Lar.ChainOp, edge_map, err=1e-4)
     # maps pairs of vertex indices to edge index
     etuple2idx = Dict{Tuple{Int, Int}, Int}()
     # builds `edge_map`
-    for ei in 1:nedgenum
+    Thread.@threads for ei in 1:nedgenum
         nEV[ei, collect(nedges[ei])] .= 1
         etuple2idx[nedges[ei]] = ei
     end
-    for i in 1:length(edge_map)
+    Thread.@threads for i in 1:length(edge_map)
         row = edge_map[i]
         row = map(x->edges[x], row)
         row = filter(t->t[1]!=t[2], row)
@@ -261,7 +261,7 @@ function get_external_cycle(V::Lar.Points, EV::Lar.ChainOp, FE::Lar.ChainOp)
     FV = abs.(FE)*EV
     vs = sparsevec(mapslices(sum, abs.(EV), dims=1)').nzind
     minv_x1 = maxv_x1 = minv_x2 = maxv_x2 = pop!(vs)
-    for i in vs
+    Threads.@threads for i in vs
         if V[i, 1] > V[maxv_x1, 1]
             maxv_x1 = i
         elseif V[i, 1] < V[minv_x1, 1]
@@ -305,7 +305,7 @@ function pre_containment_test(bboxes)
 end
 function prune_containment_graph(n, V, EVs, shells, graph)
 
-    for i in 1:n
+    Threads.@threads for i in 1:n
         an_edge = shells[i].nzind[1]
         origin_index = EVs[i][an_edge, :].nzind[1]
         origin = V[origin_index, :]
@@ -404,21 +404,25 @@ function componentgraph(V, copEV, bicon_comps)
 	boundaries = Array{Lar.ChainOp, 1}(undef, n)
 	EVs = Array{Lar.ChainOp, 1}(undef, n)
     # for each component
-	for p in 1:n
-		ev = copEV[sort(bicon_comps[p]), :]
-        # computation of 2-cells
-		fe = Lar.Arrangement.minimal_2cycles(V, ev)
-        # exterior cycle
-		shell_num = Lar.Arrangement.get_external_cycle(V, ev, fe)
-        # decompose each fe (co-boundary local to component)
-		EVs[p] = ev
-		tokeep = setdiff(1:fe.m, shell_num)
-		boundaries[p] = fe[tokeep, :]
-		shells[p] = fe[shell_num, :]
+	@sync begin 
+        for p in 1:n
+		    ev = copEV[sort(bicon_comps[p]), :]
+            # computation of 2-cells
+		    fe = Lar.Arrangement.minimal_2cycles(V, ev)
+            # exterior cycle
+            @async begin 
+                shell_num = Lar.Arrangement.get_external_cycle(V, ev, fe) 
+            end
+            # decompose each fe (co-boundary local to component)
+            EVs[p] = ev
+            tokeep = setdiff(1:fe.m, shell_num)
+            boundaries[p] = fe[tokeep, :]
+            shells[p] = fe[shell_num, :]
+        end
     end
     # computation of bounding boxes of isolated components
 	shell_bboxes = []
-	for i in 1:n
+	Threads.@threads for i in 1:n
     	vs_indexes = (abs.(EVs[i]')*abs.(shells[i])).nzind
    		push!(shell_bboxes, Lar.bbox(V[vs_indexes, :]))
 	end
@@ -435,7 +439,7 @@ function cleandecomposition(V, copEV, sigma, edge_map)
     new_edges = []
     map(i->new_edges=union(new_edges, edge_map[i]), sigma.nzind)
     ev = copEV[new_edges, :]
-    for e in 1:copEV.m
+    Threads.@threads for e in 1:copEV.m
         if !(e in new_edges)
 
             vidxs = copEV[e, :].nzind
@@ -448,7 +452,7 @@ function cleandecomposition(V, copEV, sigma, edge_map)
         end
     end
 
-    for i in reverse(todel)
+    Threads.@threads for i in reverse(todel)
         for row in edge_map
 
             filter!(x->x!=i, row)
@@ -481,35 +485,35 @@ function planar_arrangement_1( V, copEV,
 	bigPI = Lar.spaceindex(model::Lar.LAR)
 
     # multiprocessing of edge fragmentation
-    if (multiproc == true)
-        in_chan = Distributed.RemoteChannel(()->Channel{Int64}(0))
-        out_chan = Distributed.RemoteChannel(()->Channel{Tuple}(0))
-        ordered_dict = SortedDict{Int64,Tuple}()
-        @async begin
-            for i in 1:edgenum
-                put!(in_chan,i)
-            end
-            for p in distributed.workers()
-                put!(in_chan,-1)
-            end
-        end
-        for p in distributed.workers()
-            @async Base.remote_do(frag_edge_channel, p, in_chan, out_chan, V, copEV, bigPI)
-        end
-        for i in 1:edgenum
-            frag_done_job = take!(out_chan)
-            ordered_dict[frag_done_job[1]] = frag_done_job[2]
-        end
-        for (dkey, dval) in ordered_dict
-            i = dkey
-            v, ev = dval
-            newedges_nums = map(x->x+finalcells_num, collect(1:size(ev, 1)))
-            edge_map[i] = newedges_nums
-            finalcells_num += size(ev, 1)
-            rV, rEV = Lar.skel_merge(rV, rEV, v, ev)
-        end
-    else
-        # sequential (iterative) processing of edge fragmentation
+    # if (multiproc == true)
+    #     in_chan = Distributed.RemoteChannel(()->Channel{Int64}(0))
+    #     out_chan = Distributed.RemoteChannel(()->Channel{Tuple}(0))
+    #     ordered_dict = DataStructures.SortedDict{Int64,Tuple}()
+    #     @async begin
+    #         for i in 1:edgenum
+    #             put!(in_chan,i)
+    #         end
+    #         for p in distributed.workers()
+    #             put!(in_chan,-1)
+    #         end
+    #     end
+    #     for p in distributed.workers()
+    #         @async Base.remote_do(frag_edge_channel, p, in_chan, out_chan, V, copEV, bigPI)
+    #     end
+    #     for i in 1:edgenum
+    #         frag_done_job = take!(out_chan)
+    #         ordered_dict[frag_done_job[1]] = frag_done_job[2]
+    #     end
+    #     for (dkey, dval) in ordered_dict
+    #         i = dkey
+    #         v, ev = dval
+    #         newedges_nums = map(x->x+finalcells_num, collect(1:size(ev, 1)))
+    #         edge_map[i] = newedges_nums
+    #         finalcells_num += size(ev, 1)
+    #         rV, rEV = Lar.skel_merge(rV, rEV, v, ev)
+    #     end
+    # else
+        # sequential (iterative) processing of edge fragmentation 
         for i in 1:edgenum
             v, ev = frag_edge(V, copEV, i, bigPI)
             newedges_nums = map(x->x+finalcells_num, collect(1:size(ev, 1)))
@@ -518,7 +522,7 @@ function planar_arrangement_1( V, copEV,
             rV = convert(Lar.Points, rV)
             rV, rEV = Lar.skel_merge(rV, rEV, v, ev)
         end
-    end
+    # end
     # merging of close vertices and edges (2D congruence)
     V, copEV = rV, rEV
     V, copEV = merge_vertices!(V, copEV, edge_map)
@@ -531,7 +535,7 @@ function planar_arrangement_2(V, copEV,bicon_comps, edge_map,
     edges = sort(union(bicon_comps...))
     todel = sort(setdiff(collect(1:size(copEV,1)), edges))
 
-    for i in reverse(todel)
+    Threads.@threads for i in reverse(todel)
         for row in edge_map
 
             filter!(x->x!=i, row)
