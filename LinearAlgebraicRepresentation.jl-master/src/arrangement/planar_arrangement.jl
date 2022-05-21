@@ -1,5 +1,6 @@
 using LinearAlgebraicRepresentation
 Lar = LinearAlgebraicRepresentation
+using NearestNeighbors
 
 """
     frag_edge_channel(in_chan, out_chan,
@@ -95,6 +96,52 @@ function intersect_edges(V::Lar.Points, edge1::Lar.Cell, edge2::Lar.Cell)
 end
 
 
+function mergeCongruentVertices(vertsnum,newverts,kdtree,V,err=1e-4)
+    todelete = []
+    i = 1
+    Threads.@threads for vi in 1:vertsnum
+        if !(vi in todelete)
+            nearvs = Lar.inrange(kdtree, V[vi, :], err)
+            newverts[nearvs] .= i
+            nearvs = setdiff(nearvs, vi)
+            todelete = union(todelete, nearvs)
+            i = i + 1
+        end
+    end
+    return todelete,newverts
+end
+
+function mergeCongruentEdges(edgenum,newverts,EV)
+    edges = Array{Tuple{Int, Int}, 1}(undef, edgenum)
+    oedges = Array{Tuple{Int, Int}, 1}(undef, edgenum)
+    @sync begin
+        for ei in 1:edgenum
+            @async begin
+                v1, v2 = EV[ei, :].nzind
+                edges[ei] = Tuple{Int, Int}(sort([newverts[v1], newverts[v2]]))
+                oedges[ei] = Tuple{Int, Int}(sort([v1, v2])) 
+            end
+        end 
+    end
+    return edges,oedges
+end
+
+function buildEdgeMap(nedges,nedgenum,nEV,etuple2idx,edge_map,edges)
+    for ei in 1:nedgenum
+        nEV[ei, collect(nedges[ei])] .= 1
+        etuple2idx[nedges[ei]] = ei
+    end
+    
+    for i in 1:length(edge_map)
+        row = edge_map[i]
+        row = map(x->edges[x], row)
+        row = filter(t->t[1]!=t[2], row)
+        row = map(x->etuple2idx[x], row)
+        edge_map[i] = row 
+    end        
+    return edge_map,nEV
+end
+
 """
     merge_vertices!(V::Lar.Points, EV::Lar.ChainOp, edge_map, err=1e-4)
 
@@ -106,48 +153,26 @@ function merge_vertices!(V::Lar.Points, EV::Lar.ChainOp, edge_map, err=1e-4)
     newverts = zeros(Int, vertsnum)
     # KDTree constructor needs an explicit array of Float64
     V = Array{Float64,2}(V)
-    kdtree = KDTree(permutedims(V))
+    kdtree = NearestNeighbors.KDTree(permutedims(V))
 
     # merge congruent vertices
-    todelete = []
-    i = 1
-    for vi in 1:vertsnum
-        if !(vi in todelete)
-            nearvs = Lar.inrange(kdtree, V[vi, :], err)
-            newverts[nearvs] .= i
-            nearvs = setdiff(nearvs, vi)
-            todelete = union(todelete, nearvs)
-            i = i + 1
-        end
-    end
+    todelete,newverts = mergeCongruentVertices(vertsnum,newverts,kdtree,V)
+
     nV = V[setdiff(collect(1:vertsnum), todelete), :]
 
     # merge congruent edges
-    edges = Array{Tuple{Int, Int}, 1}(undef, edgenum)
-    oedges = Array{Tuple{Int, Int}, 1}(undef, edgenum)
-    Threads.@threads for ei in 1:edgenum
-        v1, v2 = EV[ei, :].nzind
-        edges[ei] = Tuple{Int, Int}(sort([newverts[v1], newverts[v2]]))
-        oedges[ei] = Tuple{Int, Int}(sort([v1, v2]))
-    end
+    edges,oedges=mergeCongruentEdges(edgenum,newverts,EV)
+
     nedges = union(edges)
     nedges = filter(t->t[1]!=t[2], nedges)
     nedgenum = length(nedges)
     nEV = spzeros(Int8, nedgenum, size(nV, 1))
     # maps pairs of vertex indices to edge index
     etuple2idx = Dict{Tuple{Int, Int}, Int}()
+
     # builds `edge_map`
-    Threads.@threads for ei in 1:nedgenum
-        nEV[ei, collect(nedges[ei])] .= 1
-        etuple2idx[nedges[ei]] = ei
-    end
-    Threads.@threads for i in 1:length(edge_map)
-        row = edge_map[i]
-        row = map(x->edges[x], row)
-        row = filter(t->t[1]!=t[2], row)
-        row = map(x->etuple2idx[x], row)
-        edge_map[i] = row
-    end
+    edge_map,nEV=buildEdgeMap(nedges,nedgenum,nEV,etuple2idx,edge_map,edges)
+
     # return new vertices and new edges
     return Lar.Points(nV), nEV
 end
@@ -584,7 +609,7 @@ function planar_arrangement(
 
 
 #planar_arrangement_1
-	V,copEV,sigma,edge_map=Lar.Arrangement.planar_arrangement_1(V,copEV,sigma,return_edge_map,multiproc)
+	V,copEV,sigma,edge_map=planar_arrangement_1(V,copEV,sigma,return_edge_map,multiproc)
 
 # cleandecomposition
 	if sigma.n > 0
