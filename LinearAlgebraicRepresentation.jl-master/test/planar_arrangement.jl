@@ -4,6 +4,7 @@ using LinearAlgebra
 using LinearAlgebraicRepresentation
 using LinearAlgebraicRepresentation.Arrangement
 Lar = LinearAlgebraicRepresentation
+include("C:/Users/Utente/Desktop/CPD/TGW2D/LinearAlgebraicRepresentation.jl-master/src/arrangement/planar_arrangement.jl")
 
 @testset "Edge fragmentation tests" begin
     V = [2 2; 4 2; 3 3.5; 1 3; 5 3; 1 2; 5 2]
@@ -16,9 +17,9 @@ Lar = LinearAlgebraicRepresentation
     ]))
 
     @testset "intersect_edges" begin
-        inters1 = Lar.Arrangement.intersect_edges(V, EV[5, :], EV[1, :])
-        inters2 = Lar.Arrangement.intersect_edges(V, EV[1, :], EV[4, :])
-        inters3 = Lar.Arrangement.intersect_edges(V, EV[1, :], EV[2, :])
+        inters1 = intersect_edges(V, EV[5, :], EV[1, :])
+        inters2 = intersect_edges(V, EV[1, :], EV[4, :])
+        inters3 = intersect_edges(V, EV[1, :], EV[2, :])
         @test inters1 == [([2. 2.], 1/4),([4. 2.], 3/4)]
         @test inters2 == []
         @test inters3 == [([4. 2.], 1)]
@@ -58,7 +59,7 @@ end
               0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0;
               0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1]
     EV = sparse(EV)
-    V, EV = Lar.Arrangement.merge_vertices!(V, EV, [])
+    V, EV = merge_vertices!(V, EV, [])
 
     @test V == [n0 n0; n0 n1u; n1u n1u; n1u n0]
     @test Matrix(EV) == [1 1 0 0;
@@ -83,7 +84,7 @@ end
               0 0 0 0 1 0 0 0 1 0 0 0] #13
     EV = sparse(EV)
 
-    bc = Lar.Arrangement.biconnected_components(EV)
+    bc = biconnected_components(EV)
     bc = Set(map(Set, bc))
 
     @test bc == Set([Set([1,5,9]), Set([2,6,10]), Set([3,7,11])])
@@ -112,7 +113,7 @@ end
                   -1  0  0  0 -1 -1 -1 -1  1 -1]
         FE = sparse(FE)
     
-        @test Lar.Arrangement.get_external_cycle(V, EV, FE) == 3
+        @test get_external_cycle(V, EV, FE) == 3
     end
 
     @testset "Containment test" begin
@@ -155,16 +156,16 @@ end
             push!(shell_bboxes, Lar.bbox(V[vs_indexes, :]))
         end
     
-        graph = Lar.Arrangement.pre_containment_test(shell_bboxes)
+        graph = pre_containment_test(shell_bboxes)
         @test graph == [0 0 1 1 0; 0 0 1 1 0; 0 0 0 1 0; 0 0 0 0 0; 0 0 0 1 0]
     
-        graph = Lar.Arrangement.prune_containment_graph(n, V, EVs, shells, graph)
+        graph = prune_containment_graph(n, V, EVs, shells, graph)
         @test graph == [0 0 1 1 0; 0 0 1 1 0; 0 0 0 1 0; 0 0 0 0 0; 0 0 0 0 0]
     end
 
     @testset "Transitive reduction" begin
         graph = [0 0 1 1 0; 0 0 1 1 0; 0 0 0 1 0; 0 0 0 0 0; 0 0 0 0 0]
-        Lar.Arrangement.transitive_reduction!(graph)
+        transitive_reduction!(graph)
         @test graph == [0 0 1 0 0; 0 0 1 0 0; 0 0 0 1 0; 0 0 0 0 0; 0 0 0 0 0]
     end
 
@@ -199,7 +200,7 @@ end
             push!(shell_bboxes, Lar.bbox(V[vs_indexes, :]))
         end
     
-        EV, FE = Lar.Arrangement.cell_merging(2, graph, V, EVs, boundaries, shells, shell_bboxes)
+        EV, FE = cell_merging(2, graph, V, EVs, boundaries, shells, shell_bboxes)
     
         selector = sparse(ones(Int8, 1, 3))
     
