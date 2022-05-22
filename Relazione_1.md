@@ -134,6 +134,7 @@ Julia può inoltre generare codice nativo per GPU, risorsa che permette di abbat
 L’algoritmo è utilizzato localmente su 2-cella per essere decomposta, e invece utilizzato globalmente per generare le 3-celle della partizione dello spazio.
 
 ![EstrazioneCicloMinimale](/images/CycleExtraction.png)
+
 Figura 1 : Estrazione di 1 ciclo minimale [2]
 
 Per ogni elemento (1-scheletro) calcolo *il bordo* ottenendo i due vertici, per ciascun vertice calcolo il cobordo, ovvero individuo gli altri elementi (1-scheletro) con un vertice coincidente (questo passaggio viene effettuato tramite valori matriciali). A questo punto si isolano due elementi tra quelli individuati formando così una catena e si ripete l’algoritmo sugli elementi della catena appena calcolata. L’obiettivo di ciascuna iterazione è quello di individuare una porzione nel piano (ovvero la 1-catena di bordo) Figura 1. [2]
@@ -145,6 +146,7 @@ Lo pseudocodice in Figura 2 è il riassunto dell’algoritmo TGW in uno spazio g
 L’algoritmo prende in input una matrice sparsa di dimensioni “m×n” e restituisce una matrice dal dominio delle D-catene a quello dei (d-1) cicli orientati. [3]
 
 ![pseudocodice](/images/Pseudocode.png)
+
 Figura 2: pseudocodice [3]
 
 1.3 **Funzioni interne principali**
@@ -153,6 +155,7 @@ Figura 2: pseudocodice [3]
 
 ![PlanarArrangement1](/images/PlanarArrangement1.png)
 ![PlanarArrangement2](/images/PlanarArrangement2.png)  
+
 Figura 3 : Codice Planar_arrangement
    
 
@@ -162,6 +165,7 @@ L’obiettivo è partizionare un complesso cellulare passato come parametro. Un 
 
 ![MergeVertices1](/images/MergeVertices1.png)
 ![MergeVertices2](/images/MergeVertices2.png)  
+
 Figura 4: Codice MergeVertices
 
 Si occupa di fondere vertici congruenti e bordi congruenti, assegnare a coppie di indici di vertici indici di bordo e costruire una mappa dei bordi.
@@ -169,6 +173,7 @@ Si occupa di fondere vertici congruenti e bordi congruenti, assegnare a coppie d
 1.3.3 **Frag Edge**
 
 ![FragEdge](/images/FragEdge.png)  
+
 Figura 5: Codice FragEdge
 
 Si occupa della frammentazione dei bordi in EV usando l'indice spaziale bigPI.
@@ -211,9 +216,11 @@ In tal senso, Julia offre strumenti che possono aiutare a diagnosticare i proble
 2. @time: Una macro che esegue un'espressione, stampando il tempo di esecuzione, il numero di allocazioni e il numero totale di byte che l'esecuzione ha causato, prima di restituire il valore dell'espressione [5]. (Figura 7)
 
 ![Profiling](/images/Figura6.png)
+
 Figura 6: Risultato Profiling
 
 ![RisultatiTestIniziale](/images/Figura7.png)
+
 Figura 7: Risultati test iniziale
 
 2.3 **Implementazione delle modifiche** 
@@ -234,12 +241,15 @@ Osservando i tempi misurati prima e dopo delle modifiche si evince un migliorame
 Come anticipato nei paragrafi sopra è stato scelto di aggiungere alcune nuove funzioni all’interno del codice così da ridurre le responsabilità di alcuni metodi già presenti nello stesso. Questa scelta implementativa ha coinvolto prevalentemente la funzione “*merge\_vertices*”. In particolare, le funzioni mergeCongruentVertices (Figura 9), mergeCongruentEdges (Figura 10), buildEdgeMap (Figura 11) sono state aggiunte al codice.  
 
 ![MergeCongruentVertices](/images/Figura9.png)
+
 Figura 9: Codice mergeCongruentVertices
 
 ![MergeCongruentEdges](/images/Figura10.png)
+
 Figura 10: Codice mergeCongruentEdges
 
 ![BuildEdgeMap](/images/Figura11.png)
+
 Figura 11: codice buildEdgeMap
 
 
