@@ -24,45 +24,44 @@ Giacomo Scordino
 
 
 # **Indice**
-[Indice	2](#_Toc104115338)
 
-[1	STUDIO PRELIMINARE	4](#_Toc104115339)
+[1	STUDIO PRELIMINARE]
 
-[1.1	Il linguaggio Julia	4](#_Toc104115340)
+[1.1	Il linguaggio Julia]
 
-[1.2	Funzionamento	4](#_Toc104115341)
+[1.2	Funzionamento]
 
-[1.2.1	Illustrazione dello pseudocodice	5](#_Toc104115342)
+[1.2.1	Illustrazione dello pseudocodice]
 
-[1.3	Funzioni interne principali	6](#_Toc104115343)
+[1.3	Funzioni interne principali]
 
-[1.3.1	Planar Arrangement	6](#_Toc104115344)
+[1.3.1	Planar Arrangement]
 
-[1.3.2	Merge Vertices	7](#_Toc104115345)
+[1.3.2	Merge Vertices]
 
-[1.3.3	Frag Edge	7](#_Toc104115346)
+[1.3.3	Frag Edge]
 
-[1.4	Analisi per il miglioramento del codice	8](#_Toc104115347)
+[1.4	Analisi per il miglioramento del codice]
 
-[2	STUDIO ESECUTIVO	9](#_Toc104115348)
+[2	STUDIO ESECUTIVO]
 
-[2.1	Calcolo Parallelo in Julia	9](#_Toc104115349)
+[2.1	Calcolo Parallelo in Julia]
 
-[2.1.1	*Task* asincroni o coroutine	9](#_Toc104115350)
+[2.1.1	*Task* asincroni o coroutine]
 
-[2.1.2	Multithreading	9](#_Toc104115351)
+[2.1.2	Multithreading]
 
-[2.1.3	Elaborazione distribuita	9](#_Toc104115352)
+[2.1.3	Elaborazione distribuita]
 
-[2.1.4	Elaborazione su GPU	10](#_Toc104115353)
+[2.1.4	Elaborazione su GPU]
 
-[2.2	Analisi Codice	10](#_Toc104115354)
+[2.2	Analisi Codice]
 
-[2.3	Implementazione delle modifiche	11](#_Toc104115355)
+[2.3	Implementazione delle modifiche]
 
-[2.4	Re-fattorizzazione	11](#_Toc104115356)
+[2.4	Re-fattorizzazione]
 
-[BIBLIOGRAFIA	13](#_Toc104115357)
+[BIBLIOGRAFIA]
 
 
 
@@ -75,27 +74,27 @@ Giacomo Scordino
 
 **Indice Figure**
 
-[Figura 1 : Estrazione di 1 ciclo minimale \[2\]	4](#_Toc104115593)
+[Figura 1 : Estrazione di 1 ciclo minimale]
 
-[Figura 2: pseudocodice \[3\]	5](#_Toc104115594)
+[Figura 2: pseudocodice]
 
-[Figura 3: Codice PlanarArrangement	6](C:\Users\Utente\Desktop\Relazione_1.docx#_Toc104115595)
+[Figura 3: Codice PlanarArrangement]
 
-[Figura 4: Codice MergeVertices	7](C:\Users\Utente\Desktop\Relazione_1.docx#_Toc104115596)
+[Figura 4: Codice MergeVertices]
 
-[Figura 5: Codice FragEdge	7](#_Toc104115597)
+[Figura 5: Codice FragEdge]
 
-[Figura 6: Risultato Profiling	10](#_Toc104115598)
+[Figura 6: Risultato Profiling]
 
-[Figura 7: Risultati test iniziale	11](#_Toc104115599)
+[Figura 7: Risultati test iniziale]
 
-[Figura 8: Risultati test finale	11](#_Toc104115600)
+[Figura 8: Risultati test finale]
 
-[Figura 9: Codice mergeCongruentVertices	12](C:\Users\Utente\Desktop\Relazione_1.docx#_Toc104115601)
+[Figura 9: Codice mergeCongruentVertices]
 
-[Figura 10: Codice mergeCongruentEdges	12](C:\Users\Utente\Desktop\Relazione_1.docx#_Toc104115602)
+[Figura 10: Codice mergeCongruentEdges]
 
-[Figura 11: codice buildEdgeMap	12](C:\Users\Utente\Desktop\Relazione_1.docx#_Toc104115603)
+[Figura 11: codice buildEdgeMap]
 
 
 
