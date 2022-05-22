@@ -186,7 +186,8 @@ Continuando l'analisi del codice ed osservando accuratamente le dipendenze prese
 
 
 
-2 # **STUDIO ESECUTIVO**
+2. # **STUDIO ESECUTIVO**
+
 All’interno di questo capitolo verrà trattato lo sviluppo del progetto nella sua fase principale, ovvero quella riguardante la messa in atto di tutte le modifiche introdotte nel capitolo precedente.
 
 Lo scopo principale è quello di migliorare le prestazioni dell’algoritmo preso in esame andando ad introdurre all’interno del codice porzioni che presentano la possibilità di essere eseguite in parallelo. Oltre a ciò, un secondo obiettivo è la re-fattorizzazione di alcune funzione, garantendo migliore scalabilità e modificabilità dei moduli interessati.
