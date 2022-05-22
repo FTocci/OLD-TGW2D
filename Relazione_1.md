@@ -123,13 +123,13 @@ Data una qualsiasi collezione di poliedri cellulari la computazione può essere 
 
 Con tali premesse, l’obiettivo del presente elaborato è stato quello di effettuare una analisi preliminare del codice a disposizione, individuando i compiti principali che l’algoritmo svolge, le dipendenze fra le varie funzione che lo compongono e determinare eventuali criticità su cui è necessario intervenire.[2]
 
-1.1**Il linguaggio Julia**
+**1.1 Il linguaggio Julia**
 
 L’algoritmo appena introdotto utilizza Julia come linguaggio di programmazione. Esso è stato creato con l’intento di garantire alte prestazioni, sfruttando a pieno le potenzialità del calcolo parallelo. È possibile utilizzare primitive che permettono di sfruttare a pieno i *core* delle macchine sulle quali viene messo in esecuzione il codice Julia, grazie al meccanismo di multi-threading.
 
 Julia può inoltre generare codice nativo per GPU, risorsa che permette di abbattere ulteriormente i tempi di esecuzione dell’algoritmo.[1]
 
-1.2 **Funzionamento**
+**1.2 Funzionamento**
 
 L’algoritmo è utilizzato localmente su 2-cella per essere decomposta, e invece utilizzato globalmente per generare le 3-celle della partizione dello spazio.
 
@@ -149,7 +149,7 @@ L’algoritmo prende in input una matrice sparsa di dimensioni “m×n” e rest
 
 Figura 2: pseudocodice [3]
 
-1.3 **Funzioni interne principali**
+**1.3 Funzioni interne principali**
 
 1.3.1 **Planar Arrangement**
 
