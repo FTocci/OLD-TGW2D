@@ -139,6 +139,7 @@ Figura 1 : Estrazione di 1 ciclo minimale [2]
 Per ogni elemento (1-scheletro) calcolo *il bordo* ottenendo i due vertici, per ciascun vertice calcolo il cobordo, ovvero individuo gli altri elementi (1-scheletro) con un vertice coincidente (questo passaggio viene effettuato tramite valori matriciali). A questo punto si isolano due elementi tra quelli individuati formando così una catena e si ripete l’algoritmo sugli elementi della catena appena calcolata. L’obiettivo di ciascuna iterazione è quello di individuare una porzione nel piano (ovvero la 1-catena di bordo) Figura 1. [2]
 
 1.2.1 **Illustrazione dello pseudocodice**
+
 Lo pseudocodice in Figura 2 è il riassunto dell’algoritmo TGW in uno spazio generico di D-dimensionale.
 
 L’algoritmo prende in input una matrice sparsa di dimensioni “m×n” e restituisce una matrice dal dominio delle D-catene a quello dei (d-1) cicli orientati. [3]
@@ -184,19 +185,24 @@ Continuando l'analisi del codice ed osservando accuratamente le dipendenze prese
 All’interno di questo capitolo verrà trattato lo sviluppo del progetto nella sua fase principale, ovvero quella riguardante la messa in atto di tutte le modifiche introdotte nel capitolo precedente.
 
 Lo scopo principale è quello di migliorare le prestazioni dell’algoritmo preso in esame andando ad introdurre all’interno del codice porzioni che presentano la possibilità di essere eseguite in parallelo. Oltre a ciò, un secondo obiettivo è la re-fattorizzazione di alcune funzione, garantendo migliore scalabilità e modificabilità dei moduli interessati.
-2.1 ## ` `**Calcolo Parallelo in Julia**
-Come introdotto nei paragrafi precedenti è stato deciso di migliorare le prestazioni dell’algoritmo usufruendo delle potenzialità garantite dal calcolo parallelo.
 
+2.1 **Calcolo Parallelo in Julia**
+Come introdotto nei paragrafi precedenti è stato deciso di migliorare le prestazioni dell’algoritmo usufruendo delle potenzialità garantite dal calcolo parallelo.
 Nei prossimi paragrafi verranno illustrate le possibili implementazioni del calcolo parallelo offerta dal linguaggio di programmazione Julia.
-2.1.1 ### ***Task* asincroni o coroutine**
+
+2.1.1 ***Task* asincroni o coroutine**
 I task di Julia consentono di sospendere e riprendere i calcoli per l'I/O, la gestione degli eventi e modelli simili. I task possono sincronizzarsi attraverso operazioni come *wait* e *fetch* e comunicare tramite canali. Pur non essendo di per sé un calcolo parallelo, Julia consente di programmare i *task* su più *thread*.
-2.1.2 ### **Multithreading**
+
+2.1.2 **Multithreading**
 Il *multithreading* di Julia offre la possibilità di programmare task simultaneamente su più di un *thread* o core della CPU, condividendo la memoria. Questo è di solito il modo più semplice per ottenere il parallelismo sul proprio PC o su un singolo grande server *multicore*.
-2.1.3 ### **Elaborazione distribuita**
+
+2.1.3 **Elaborazione distribuita**
 il calcolo distribuito esegue più processi Julia con spazi di memoria separati. Questi possono trovarsi sullo stesso computer o su più computer. La libreria standard Distributed fornisce la possibilità di eseguire in remoto una funzione Julia. Con questo blocco di base, è possibile costruire molti tipi diversi di astrazioni di calcolo distribuito.
-2.1.4 ### **Elaborazione su GPU**
+
+2.1.4 **Elaborazione su GPU**
 Il compilatore Julia GPU offre la possibilità di eseguire codice Julia in modo nativo sulle GPU. Esiste un ricco ecosistema di pacchetti Julia che puntano alle GPU.
-2.2 ## ` `**Analisi Codice** 
+
+2.2 **Analisi Codice** 
 Prima dell’attuazione delle modifiche è stata svolta un’analisi dell’algoritmo con l’obiettivo di misurarne i tempi di esecuzione e di individuare eventuali porzioni di codice che potessero rallentare notevolmente l’esecuzione dello stesso.
 
 In tal senso, Julia offre strumenti che possono aiutare a diagnosticare i problemi e a migliorare le prestazioni del codice. Per questa fase di studio dell’algoritmo sono stati usati: 
@@ -204,40 +210,38 @@ In tal senso, Julia offre strumenti che possono aiutare a diagnosticare i proble
 1. Profiling: La profilazione consente di misurare le prestazioni del codice in esecuzione e di identificare le linee che fungono da colli di bottiglia. Per la visualizzazione dei risulati è stato usato il pacchetto ProfileView [4]. (Figura 6)
 2. @time: Una macro che esegue un'espressione, stampando il tempo di esecuzione, il numero di allocazioni e il numero totale di byte che l'esecuzione ha causato, prima di restituire il valore dell'espressione [5]. (Figura 7)
 
-![](Aspose.Words.78051c2a-1184-4c0d-879f-229bb8032184.011.png)
-
+![Profiling](/images/Figura6.png)
 Figura 6: Risultato Profiling
 
-![](Aspose.Words.78051c2a-1184-4c0d-879f-229bb8032184.012.png)
-
+![RisultatiTestIniziale](/images/Figura7.png)
 Figura 7: Risultati test iniziale
 
-2.3 ## ` `**Implementazione delle modifiche** 
+2.3 **Implementazione delle modifiche** 
 All’interno dell’algoritmo è evidente una elevata presenza di cicli. Per questo motivo è stato scelto di utilizzare la tecnica del Multi-threading e in particolare, della macro *@threads*. Julia supporta i loop paralleli utilizzando la macro Threads.@threads. Questa macro viene apposta davanti a un ciclo for per indicare a Julia che il ciclo è una regione multi-thread. 
 
 Lo spazio di iterazione viene suddiviso tra i thread, dopodiché ogni thread scrive il proprio ID thread nelle posizioni assegnate.[6]
 
 A seguito delle modifiche sono stati eseguiti nuovamente i test ottenendo i risultati illustrati nella Figura 8.
 
-![](Aspose.Words.78051c2a-1184-4c0d-879f-229bb8032184.013.png)
+![RisutatiTestFinale](/images/Figura8.png)
 
 Figura 8: Risultati test finale
 
 Osservando i tempi misurati prima e dopo delle modifiche si evince un miglioramento della prestazione di circa il 30%.
-2.4 ## ` `**Re-fattorizzazione**
-Figura 9: Codice mergeCongruentVertices
-Come anticipato nei paragrafi sopra è stato scelto di aggiungere alcune nuove funzioni all’interno del codice così da ridurre le responsabilità di alcuni metodi già presenti nello stesso. Questa scelta implementativa ha coinvolto prevalentemente la funzione “*merge\_vertices*”. In particolare, le funzioni mergeCongruentVertices (Figura 9),  ![](Aspose.Words.78051c2a-1184-4c0d-879f-229bb8032184.014.png)![](Aspose.Words.78051c2a-1184-4c0d-879f-229bb8032184.015.png)![](Aspose.Words.78051c2a-1184-4c0d-879f-229bb8032184.016.png)mergeCongruentEdges (Figura 10), buildEdgeMap (Figura 11) sono state aggiunte al codice.  
 
+2.4 **Re-fattorizzazione**
+
+Come anticipato nei paragrafi sopra è stato scelto di aggiungere alcune nuove funzioni all’interno del codice così da ridurre le responsabilità di alcuni metodi già presenti nello stesso. Questa scelta implementativa ha coinvolto prevalentemente la funzione “*merge\_vertices*”. In particolare, le funzioni mergeCongruentVertices (Figura 9), mergeCongruentEdges (Figura 10), buildEdgeMap (Figura 11) sono state aggiunte al codice.  
+
+![MergeCongruentVertices](/images/Figura9.png)
+Figura 9: Codice mergeCongruentVertices
+
+![MergeCongruentEdges](/images/Figura10.png)
 Figura 10: Codice mergeCongruentEdges
 
-![](Aspose.Words.78051c2a-1184-4c0d-879f-229bb8032184.017.png)![](Aspose.Words.78051c2a-1184-4c0d-879f-229bb8032184.018.png)
-
-
-
-
-
+![BuildEdgeMap](/images/Figura11.png)
 Figura 11: codice buildEdgeMap
-![](Aspose.Words.78051c2a-1184-4c0d-879f-229bb8032184.019.png)
+
 
 
 #
