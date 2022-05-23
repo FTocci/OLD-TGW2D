@@ -234,8 +234,7 @@ Figura 7: Risultati test iniziale
 All’interno dell’algoritmo è evidente una elevata presenza di cicli. Per questo motivo è stato scelto di utilizzare la tecnica del Multi-threading e in particolare, della macro *@threads*. Julia supporta i loop paralleli utilizzando la macro Threads.@threads. Questa macro viene apposta davanti a un ciclo for per indicare a Julia che il ciclo è una regione multi-thread. 
 
 Lo spazio di iterazione viene suddiviso tra i thread, dopodiché ogni thread scrive il proprio ID thread nelle posizioni assegnate.  
-Prima di eseguire un programma Julia multithread, è necessario impostare il numero di thread. Questo puo essere impostato quando si lancia Julia della linea di  
-comando, utilizzando gli argomenti della riga di comando -t o la variabile d'ambiente JULIA_NUM_THREADS.[6]
+Prima di eseguire un programma Julia multithread, è necessario impostare il numero di thread. Questo puo essere impostato quando si lancia Julia della linea di comando, utilizzando gli argomenti della riga di comando -t o la variabile d'ambiente JULIA_NUM_THREADS.[6]
 
 A seguito delle modifiche sono stati eseguiti nuovamente i test ottenendo i risultati illustrati nella Figura 8.
 
