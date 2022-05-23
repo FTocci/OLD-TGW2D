@@ -99,7 +99,7 @@ end
 function mergeCongruentVertices(vertsnum,newverts,kdtree,V,err=1e-4)
     todelete = []
     i = 1
-    Threads.@threads for vi in 1:vertsnum
+    for vi in 1:vertsnum
         if !(vi in todelete)
             nearvs = Lar.inrange(kdtree, V[vi, :], err)
             newverts[nearvs] .= i
