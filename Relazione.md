@@ -231,9 +231,10 @@ Figura 6: Risultato Profiling
 Figura 7: Risultati test iniziale
 
 2.3 **Implementazione delle modifiche** 
-All’interno dell’algoritmo è evidente una elevata presenza di cicli. Per questo motivo è stato scelto di utilizzare la tecnica del Multi-threading e in particolare, della macro *@threads*. Julia supporta i loop paralleli utilizzando la macro Threads.@threads. Questa macro viene apposta davanti a un ciclo for per indicare a Julia che il ciclo è una regione multi-thread. 
+All’interno dell’algoritmo è evidente una elevata presenza di cicli, molti dei quali annidati. Per questo motivo è stato scelto di utilizzare la tecnica del Multi-threading. Julia supporta i loop paralleli utilizzando la macro Threads.@threads. Questa macro viene apposta davanti a un ciclo for per indicare a Julia che il ciclo è una regione multi-thread. 
 
-Lo spazio di iterazione viene suddiviso tra i thread, dopodiché ogni thread scrive il proprio ID thread nelle posizioni assegnate.[6]
+Lo spazio di iterazione viene suddiviso tra i thread, dopodiché ogni thread scrive il proprio ID thread nelle posizioni assegnate.  
+Prima di eseguire un programma Julia multithread, è necessario impostare il numero di thread. Questo puo essere impostato dalla linea di comando di Julia, utilizzando gli argomenti della riga di comando -t, o modificando la variabile d'ambiente JULIA_NUM_THREADS.[6]
 
 A seguito delle modifiche sono stati eseguiti nuovamente i test ottenendo i risultati illustrati nella Figura 8.
 
@@ -245,7 +246,7 @@ Osservando i tempi misurati prima e dopo delle modifiche si evince un migliorame
 
 2.4 **Re-fattorizzazione**
 
-Come anticipato nei paragrafi sopra è stato scelto di aggiungere alcune nuove funzioni all’interno del codice così da ridurre le responsabilità di alcuni metodi già presenti nello stesso. Questa scelta implementativa ha coinvolto prevalentemente la funzione “*merge\_vertices*”. In particolare, le funzioni mergeCongruentVertices (Figura 9), mergeCongruentEdges (Figura 10), buildEdgeMap (Figura 11) sono state aggiunte al codice.  
+Come anticipato nei paragrafi sopra è stato scelto di aggiungere alcune nuove funzioni all’interno del codice così da ridurre le responsabilità di alcuni metodi già presenti nello stesso. Questa scelta implementativa ha coinvolto prevalentemente la funzione “*merge\_vertices*”, il cui corpo al termine delle modifiche è risultato notevolemente piu leggibile. In particolare, le funzioni che sono state aggiunte al codice sono mergeCongruentVertices (Figura 9), mergeCongruentEdges (Figura 10), buildEdgeMap (Figura 11).  
 
 ![MergeCongruentVertices](/images/Figura9.png)
 
