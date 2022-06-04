@@ -1,11 +1,10 @@
-name = "TGW2D"
-uuid = "f2fc7d0b-7903-4145-ae78-27e188b07d59"
+name = "LinearAlgebraicRepresentation"
+uuid = "95167b0c-186a-594b-a231-52369c6de044"
 desc = "Topogical Gift Wrapping 2D"
 authors = ["matteomaraziti<mat.maraziti@stud.uniroma3.it>, FTocci<fed.tocci@stud.uniroma3.it>, giacomoscordino<gia.scordino1@stud.uniroma3.it>"]
 version = "0.1.0"
 
 [deps]
-ViewerGL = "32496ab8-9004-11e9-0205-c9e71bda7ab0"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 LinearAlgebraicRepresentation = "95167b0c-186a-594b-a231-52369c6de044"
