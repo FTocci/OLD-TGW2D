@@ -4,7 +4,7 @@ using LinearAlgebra
 using LinearAlgebraicRepresentation
 using LinearAlgebraicRepresentation.Arrangement
 Lar = LinearAlgebraicRepresentation
-include("C:/Users/Utente/Desktop/CPD/TGW2D/LinearAlgebraicRepresentation.jl-master/src/arrangement/planar_arrangement.jl")
+include("../LinearAlgebraicRepresentation.jl-master/src/arrangement/planar_arrangement.jl")
 
 @testset "Edge fragmentation tests" begin
     V = [2 2; 4 2; 3 3.5; 1 3; 5 3; 1 2; 5 2]
