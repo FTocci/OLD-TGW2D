@@ -78,35 +78,11 @@ Giacomo Scordino
 
 [Figura 2: pseudocodice]
 
-[Figura 4: Codice MergeVertices]
+[Figura 3: Risultato Profiling]
 
-[Figura 5: Codice FragEdge]
+[Figura 4: Risultati test iniziale]
 
-[Figura 6: Risultato Profiling]
-
-[Figura 7: Risultati test iniziale]
-
-[Figura 8: Risultati test finale]
-
-[Figura 9: Codice mergeCongruentVertices]
-
-[Figura 10: Codice mergeCongruentEdges]
-
-[Figura 11: codice buildEdgeMap]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+[Figura 5: Risultati test finale]
 
 
 
@@ -319,13 +295,13 @@ In tal senso, Julia offre strumenti che possono aiutare a diagnosticare i proble
 1. Profiling: La profilazione consente di misurare le prestazioni del codice in esecuzione e di identificare le linee che fungono da colli di bottiglia. Per la visualizzazione dei risulati è stato usato il pacchetto ProfileView [4]. (Figura 6)
 2. @time: Una macro che esegue un'espressione, stampando il tempo di esecuzione, il numero di allocazioni e il numero totale di byte che l'esecuzione ha causato, prima di restituire il valore dell'espressione [5]. (Figura 7)
 
-![Profiling](/images/Figura6.png)
+![Profiling](/images/Figura3.png)
 
-Figura 6: Risultato Profiling
+Figura 3: Risultato Profiling
 
-![RisultatiTestIniziale](/images/Figura7.png)
+![RisultatiTestIniziale](/images/Figura4.png)
 
-Figura 7: Risultati test iniziale
+Figura 4: Risultati test iniziale
 
 2.3 **Implementazione delle modifiche** 
 All’interno dell’algoritmo è evidente una elevata presenza di cicli, molti dei quali annidati. Per questo motivo è stato scelto di utilizzare la tecnica del Multi-threading. Julia supporta i loop paralleli utilizzando la macro Threads.@threads. Questa macro viene apposta davanti a un ciclo for per indicare a Julia che il ciclo è una regione multi-thread. 
@@ -335,9 +311,9 @@ Prima di eseguire un programma Julia multithread, è necessario impostare il num
 
 A seguito delle modifiche sono stati eseguiti nuovamente i test ottenendo i risultati illustrati nella Figura 8.
 
-![RisutatiTestFinale](/images/Figura8.png)
+![RisutatiTestFinale](/images/Figura5.png)
 
-Figura 8: Risultati test finale
+Figura 5: Risultati test finale
 
 Osservando i tempi misurati prima e dopo delle modifiche si evince un miglioramento della prestazione di circa il 30%.
 
@@ -345,23 +321,54 @@ Osservando i tempi misurati prima e dopo delle modifiche si evince un migliorame
 
 Come anticipato nei paragrafi sopra è stato scelto di aggiungere alcune nuove funzioni all’interno del codice così da ridurre le responsabilità di alcuni metodi già presenti nello stesso. Questa scelta implementativa ha coinvolto prevalentemente la funzione “*merge\_vertices*”, il cui corpo al termine delle modifiche è risultato notevolemente piu leggibile. In particolare, le funzioni che sono state aggiunte al codice sono mergeCongruentVertices (Figura 9), mergeCongruentEdges (Figura 10), buildEdgeMap (Figura 11).  
 
-![MergeCongruentVertices](/images/Figura9.png)
 
-Figura 9: Codice mergeCongruentVertices
+```
+function mergeCongruentVertices(vertsnum,newverts,kdtree,V,err=1e-4)
+    todelete = []
+    i = 1
+    for vi in 1:vertsnum
+        if !(vi in todelete)
+            nearvs = Lar.inrange(kdtree, V[vi, :], err)
+            newverts[nearvs] .= i
+            nearvs = setdiff(nearvs, vi)
+            todelete = union(todelete, nearvs)
+            i = i + 1
+        end
+    end
+    return todelete,newverts
+end
 
-![MergeCongruentEdges](/images/Figura10.png)
+function mergeCongruentEdges(edgenum,newverts,EV)
+    edges = Array{Tuple{Int, Int}, 1}(undef, edgenum)
+    oedges = Array{Tuple{Int, Int}, 1}(undef, edgenum)
+    @sync begin
+        for ei in 1:edgenum
+            @async begin
+                v1, v2 = EV[ei, :].nzind
+                edges[ei] = Tuple{Int, Int}(sort([newverts[v1], newverts[v2]]))
+                oedges[ei] = Tuple{Int, Int}(sort([v1, v2])) 
+            end
+        end 
+    end
+    return edges,oedges
+end
 
-Figura 10: Codice mergeCongruentEdges
-
-![BuildEdgeMap](/images/Figura11.png)
-
-Figura 11: codice buildEdgeMap
-
-
-
-#
-#
-
+function buildEdgeMap(nedges,nedgenum,nEV,etuple2idx,edge_map,edges)
+    for ei in 1:nedgenum
+        nEV[ei, collect(nedges[ei])] .= 1
+        etuple2idx[nedges[ei]] = ei
+    end
+    
+    for i in 1:length(edge_map)
+        row = edge_map[i]
+        row = map(x->edges[x], row)
+        row = filter(t->t[1]!=t[2], row)
+        row = map(x->etuple2idx[x], row)
+        edge_map[i] = row 
+    end        
+    return edge_map,nEV
+end
+```
 
 
 # **BIBLIOGRAFIA**
