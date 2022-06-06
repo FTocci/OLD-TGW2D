@@ -1,11 +1,12 @@
 # TGW2D
 CPD22-Project6  
+
 Matteo Maraziti  
-![MatteoMaraziti](/images/contributors/MatteoMaraziti.jpg)
+![MatteoMaraziti](/images/contributors/MatteoMaraziti.png)
 
 Federico Tocci  
-![FedericoTocci](/images/contributors/FedericoTocci.jpg)
+![FedericoTocci](/images/contributors/FedericoTocci.png)
 
 Giacomo Scordino
-![GiacomoScordino](/images/contributors/GiacomoScordino.jpg)
+![GiacomoScordino](/images/contributors/GiacomoScordino.png)
 
