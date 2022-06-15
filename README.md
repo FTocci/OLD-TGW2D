@@ -4,15 +4,15 @@ Julia Hub: https://github.com/JuliaRegistries/General/pull/62045
 
 CPD22-Project6  
 
-Matteo Maraziti  
+Matteo Maraziti 
 
-![MatteoMaraziti](/images/contributors/MatteoMaraziti.png)
+#![MatteoMaraziti](/images/contributors/MatteoMaraziti.png)
 
 Federico Tocci  
 
-![FedericoTocci](/images/contributors/FedericoTocci.png)
+#![FedericoTocci](/images/contributors/FedericoTocci.png)
 
 Giacomo Scordino
 
-![GiacomoScordino](/images/contributors/GiacomoScordino.png)
+#![GiacomoScordino](/images/contributors/GiacomoScordino.png)
 
