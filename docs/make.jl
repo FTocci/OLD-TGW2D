@@ -2,14 +2,16 @@ using Documenter
 using TGW2D
 
 makedocs(
-    sitename = "TGW2D",
-    format = Documenter.HTML(),
-    modules = [TGW2D]
+    format = Documenter.HTML(
+		prettyurls = get(ENV, "CI", nothing) == "true"
+	),
+    sitename="TGW2D.jl",
+    pages=[
+        "Informazioni generali" => "index.md",
+    ],
+    modules=[TGW2D]
 )
 
-# Documenter can also automatically deploy documentation to gh-pages.
-# See "Hosting Documentation" and deploydocs() in the Documenter manual
-# for more information.
-#=deploydocs(
-    repo = "<repository url>"
-)=#
+deploydocs(
+    repo="github.com/FTocci/TgwTwoDimensions.jl"
+)
