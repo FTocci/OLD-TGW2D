@@ -13,7 +13,7 @@ makedocs(
 )
 
 deploydocs(
-    repo="github.com/FTocci/TgwTwoDimensions.jl"
+    repo="github.com/FTocci/TGW2D.git"
 )
 
 Themes.compile("docs/src/documenter-dark.scss", "docs/build/assets/themes/documenter-dark.css")

@@ -1,0 +1,265 @@
+<html><head><style>body {
+   color: black;
+}
+</style></head><body><p><strong>Topological gift wrapping 2D</strong></p>
+<p><a href="https://github.com/FTocci/TGW2D">Link repository</a></p>
+<p>Matteo Maraziti</p>
+<p>Federico Tocci</p>
+<p>Giacomo Scordino</p>
+<h1 id="-indice-"><strong>Indice</strong></h1>
+<p>[1    STUDIO PRELIMINARE]</p>
+<p>[1.1    Il linguaggio Julia]</p>
+<p>[1.2    Funzionamento]</p>
+<p>[1.2.1    Illustrazione dello pseudocodice]</p>
+<p>[1.3    Funzioni interne principali]</p>
+<p>[1.3.1    Planar Arrangement]</p>
+<p>[1.3.2    Merge Vertices]</p>
+<p>[1.3.3    Frag Edge]</p>
+<p>[1.4    Analisi per il miglioramento del codice]</p>
+<p>[2    STUDIO ESECUTIVO]</p>
+<p>[2.1    Calcolo Parallelo in Julia]</p>
+<p>[2.1.1    <em>Task</em> asincroni o coroutine]</p>
+<p>[2.1.2    Multithreading]</p>
+<p>[2.1.3    Elaborazione distribuita]</p>
+<p>[2.1.4    Elaborazione su GPU]</p>
+<p>[2.2    Analisi Codice]</p>
+<p>[2.3    Implementazione delle modifiche]</p>
+<p>[2.4    Re-fattorizzazione]</p>
+<p>[BIBLIOGRAFIA]</p>
+<p><strong>Indice Figure</strong></p>
+<p>[Figura 1 : Estrazione di 1 ciclo minimale]</p>
+<p>[Figura 2: pseudocodice]</p>
+<p>[Figura 3: Risultato Profiling]</p>
+<p>[Figura 4: Risultati test iniziale]</p>
+<p>[Figura 5: Risultati test finale]</p>
+<ol>
+<li><h1 id="-studio-preliminare-"><strong>STUDIO PRELIMINARE</strong></h1>
+Il topological gift wrapping è un algoritmo che produce un insieme di complessi di catene in 2D.</li>
+</ol>
+<p>Data una qualsiasi collezione di poliedri cellulari la computazione può essere riassunta con i seguenti passaggi:</p>
+<ol>
+<li>Estrarre i due scheletri dei poliedri;</li>
+<li>Fondere in modo efficiente tutte le loro 2-celle;</li>
+<li>Calcolare su ogni 2-cella il suo complesso di catene locale.</li>
+</ol>
+<p>Con tali premesse, l’obiettivo del presente elaborato è stato quello di effettuare una analisi preliminare del codice a disposizione, individuando i compiti principali che l’algoritmo svolge, le dipendenze fra le varie funzione che lo compongono e determinare eventuali criticità su cui è necessario intervenire.[2]</p>
+<p><strong>1.1 Il linguaggio Julia</strong></p>
+<p>L’algoritmo appena introdotto utilizza Julia come linguaggio di programmazione. Esso è stato creato con l’intento di garantire alte prestazioni, sfruttando a pieno le potenzialità del calcolo parallelo. È possibile utilizzare primitive che permettono di sfruttare a pieno i <em>core</em> delle macchine sulle quali viene messo in esecuzione il codice Julia, grazie al meccanismo di multi-threading.</p>
+<p>Julia può inoltre generare codice nativo per GPU, risorsa che permette di abbattere ulteriormente i tempi di esecuzione dell’algoritmo.[1]</p>
+<p><strong>1.2 Funzionamento</strong></p>
+<p>L’algoritmo è utilizzato localmente su 2-cella per essere decomposta, e invece utilizzato globalmente per generare le 3-celle della partizione dello spazio.</p>
+<p><img src="/images/CycleExtraction.png" alt="EstrazioneCicloMinimale"></p>
+<p>Figura 1 : Estrazione di 1 ciclo minimale [2]</p>
+<p>Per ogni elemento (1-scheletro) calcolo <em>il bordo</em> ottenendo i due vertici, per ciascun vertice calcolo il cobordo, ovvero individuo gli altri elementi (1-scheletro) con un vertice coincidente (questo passaggio viene effettuato tramite valori matriciali). A questo punto si isolano due elementi tra quelli individuati formando così una catena e si ripete l’algoritmo sugli elementi della catena appena calcolata. L’obiettivo di ciascuna iterazione è quello di individuare una porzione nel piano (ovvero la 1-catena di bordo) Figura 1. [2]</p>
+<p>1.2.1 <strong>Illustrazione dello pseudocodice</strong></p>
+<p>Lo pseudocodice in Figura 2 è il riassunto dell’algoritmo TGW in uno spazio generico di D-dimensionale.</p>
+<p>L’algoritmo prende in input una matrice sparsa di dimensioni “m×n” e restituisce una matrice dal dominio delle D-catene a quello dei (d-1) cicli orientati. [3]</p>
+<p><img src="/images/Pseudocode.png" alt="pseudocodice"></p>
+<p>Figura 2: pseudocodice [3]</p>
+<p><strong>1.3 Funzioni interne principali</strong></p>
+<p>1.3.1 <strong>Planar Arrangement</strong></p>
+<pre><code><span class="hljs-keyword">function</span> planar_arrangement(
+        V<span class="hljs-type">::</span>Lar.Points,
+        copEV<span class="hljs-type">::</span>Lar.ChainOp,
+        sigma<span class="hljs-type">::</span>Lar.Chain=spzeros(<span class="hljs-built_in">Int8</span>, <span class="hljs-number">0</span>),
+        return_edge_map<span class="hljs-type">::</span><span class="hljs-built_in">Bool</span>=<span class="hljs-literal">false</span>,
+        multiproc<span class="hljs-type">::</span><span class="hljs-built_in">Bool</span>=<span class="hljs-literal">false</span>)
+<span class="hljs-comment">#planar_arrangement_1</span>
+    V,copEV,sigma,edge_map=Lar.Arrangement.planar_arrangement_1(V,copEV,sigma,return_edge_map,multiproc)
+<span class="hljs-comment"># cleandecomposition</span>
+    <span class="hljs-keyword">if</span> sigma.n &gt; <span class="hljs-number">0</span>
+        V,copEV=Lar.Arrangement.cleandecomposition(V, copEV, sigma, edge_map)
+    <span class="hljs-keyword">end</span>
+    bicon_comps = Lar.Arrangement.biconnected_components(copEV)
+    <span class="hljs-comment"># EV = Lar.cop2lar(copEV)</span>
+    <span class="hljs-comment"># V,bicon_comps = Lar.biconnectedComponent((V,EV))</span>
+    <span class="hljs-keyword">if</span> isempty(bicon_comps)
+        println(<span class="hljs-string">"No biconnected components found."</span>)
+        <span class="hljs-keyword">if</span> (return_edge_map)
+            <span class="hljs-keyword">return</span> (<span class="hljs-literal">nothing</span>, <span class="hljs-literal">nothing</span>, <span class="hljs-literal">nothing</span>, <span class="hljs-literal">nothing</span>)
+        <span class="hljs-keyword">else</span>
+            <span class="hljs-keyword">return</span> (<span class="hljs-literal">nothing</span>, <span class="hljs-literal">nothing</span>, <span class="hljs-literal">nothing</span>)
+        <span class="hljs-keyword">end</span>
+    <span class="hljs-keyword">end</span>
+<span class="hljs-comment">#Planar_arrangement_2</span>
+    V,copEV,FE=Lar.Arrangement.planar_arrangement_2(V,copEV,bicon_comps,edge_map,sigma)
+    <span class="hljs-keyword">if</span> (return_edge_map)
+         <span class="hljs-keyword">return</span> V, copEV, FE, edge_map
+    <span class="hljs-keyword">else</span>
+         <span class="hljs-keyword">return</span> V, copEV, FE
+    <span class="hljs-keyword">end</span>
+<span class="hljs-keyword">end</span>
+</code></pre><p>L’obiettivo è partizionare un complesso cellulare passato come parametro. Un complesso cellulare è partizionato quando l&#39;intersezione di ogni possibile coppia di celle del complesso è vuota e l&#39;unione di tutte le celle è l&#39;intero spazio euclideo.</p>
+<p>1.3.2 <strong>Merge Vertices</strong></p>
+<pre><code><span class="hljs-keyword">function</span> merge_vertices!(V<span class="hljs-type">::</span>Lar.Points, EV<span class="hljs-type">::</span>Lar.ChainOp, edge_map, err=<span class="hljs-number">1e-4</span>)
+    vertsnum = size(V, <span class="hljs-number">1</span>)
+    edgenum = size(EV, <span class="hljs-number">1</span>)
+    newverts = zeros(<span class="hljs-built_in">Int</span>, vertsnum)
+    <span class="hljs-comment"># KDTree constructor needs an explicit array of Float64</span>
+    V = <span class="hljs-built_in">Array</span>{<span class="hljs-built_in">Float64</span>,<span class="hljs-number">2</span>}(V)
+    kdtree = KDTree(permutedims(V))
+
+    <span class="hljs-comment"># merge congruent vertices</span>
+    todelete = []
+    i = <span class="hljs-number">1</span>
+    <span class="hljs-keyword">for</span> vi <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:vertsnum
+        <span class="hljs-keyword">if</span> !(vi <span class="hljs-keyword">in</span> todelete)
+            nearvs = Lar.inrange(kdtree, V[vi, :], err)
+            newverts[nearvs] .= i
+            nearvs = setdiff(nearvs, vi)
+            todelete = union(todelete, nearvs)
+            i = i + <span class="hljs-number">1</span>
+        <span class="hljs-keyword">end</span>
+    <span class="hljs-keyword">end</span>
+    nV = V[setdiff(collect(<span class="hljs-number">1</span>:vertsnum), todelete), :]
+
+    <span class="hljs-comment"># merge congruent edges</span>
+    edges = <span class="hljs-built_in">Array</span>{<span class="hljs-built_in">Tuple</span>{<span class="hljs-built_in">Int</span>, <span class="hljs-built_in">Int</span>}, <span class="hljs-number">1</span>}(undef, edgenum)
+    oedges = <span class="hljs-built_in">Array</span>{<span class="hljs-built_in">Tuple</span>{<span class="hljs-built_in">Int</span>, <span class="hljs-built_in">Int</span>}, <span class="hljs-number">1</span>}(undef, edgenum)
+    <span class="hljs-keyword">for</span> ei <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:edgenum
+        v1, v2 = EV[ei, :].nzind
+        edges[ei] = <span class="hljs-built_in">Tuple</span>{<span class="hljs-built_in">Int</span>, <span class="hljs-built_in">Int</span>}(sort([newverts[v1], newverts[v2]]))
+        oedges[ei] = <span class="hljs-built_in">Tuple</span>{<span class="hljs-built_in">Int</span>, <span class="hljs-built_in">Int</span>}(sort([v1, v2]))
+    <span class="hljs-keyword">end</span>
+    nedges = union(edges)
+    nedges = filter(t-&gt;t[<span class="hljs-number">1</span>]!=t[<span class="hljs-number">2</span>], nedges)
+    nedgenum = length(nedges)
+    nEV = spzeros(<span class="hljs-built_in">Int8</span>, nedgenum, size(nV, <span class="hljs-number">1</span>))
+    <span class="hljs-comment"># maps pairs of vertex indices to edge index</span>
+    etuple2idx = <span class="hljs-built_in">Dict</span>{<span class="hljs-built_in">Tuple</span>{<span class="hljs-built_in">Int</span>, <span class="hljs-built_in">Int</span>}, <span class="hljs-built_in">Int</span>}()
+    <span class="hljs-comment"># builds `edge_map`</span>
+    <span class="hljs-keyword">for</span> ei <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:nedgenum
+        nEV[ei, collect(nedges[ei])] .= <span class="hljs-number">1</span>
+        etuple2idx[nedges[ei]] = ei
+    <span class="hljs-keyword">end</span>
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:length(edge_map)
+        row = edge_map[i]
+        row = map(x-&gt;edges[x], row)
+        row = filter(t-&gt;t[<span class="hljs-number">1</span>]!=t[<span class="hljs-number">2</span>], row)
+        row = map(x-&gt;etuple2idx[x], row)
+        edge_map[i] = row
+    <span class="hljs-keyword">end</span>
+    <span class="hljs-comment"># return new vertices and new edges</span>
+    <span class="hljs-keyword">return</span> Lar.Points(nV), nEV
+<span class="hljs-keyword">end</span>
+</code></pre><p>Si occupa di fondere vertici congruenti e bordi congruenti, assegnare a coppie di indici di vertici indici di bordo e costruire una mappa dei bordi.</p>
+<p>1.3.3 <strong>Frag Edge</strong></p>
+<pre><code><span class="hljs-keyword">function</span> frag_edge(V, EV<span class="hljs-type">::</span>Lar.ChainOp, edge_idx<span class="hljs-type">::</span><span class="hljs-built_in">Int</span>, bigPI)
+    alphas = <span class="hljs-built_in">Dict</span>{<span class="hljs-built_in">Float64</span>, <span class="hljs-built_in">Int</span>}()
+    edge = EV[edge_idx, :]
+    verts = V[edge.nzind, :]
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> bigPI[edge_idx]
+        <span class="hljs-keyword">if</span> i != edge_idx
+            intersection = Lar.Arrangement.intersect_edges(
+                V, edge, EV[i, :])
+            <span class="hljs-keyword">for</span> (point, alpha) <span class="hljs-keyword">in</span> intersection
+                verts = [verts; point]
+                alphas[alpha] = size(verts, <span class="hljs-number">1</span>)
+            <span class="hljs-keyword">end</span>
+        <span class="hljs-keyword">end</span>
+    <span class="hljs-keyword">end</span>
+    alphas[<span class="hljs-number">0.0</span>], alphas[<span class="hljs-number">1.0</span>] = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>]
+    alphas_keys = sort(collect(keys(alphas)))
+    edge_num = length(alphas_keys)-<span class="hljs-number">1</span>
+    verts_num = size(verts, <span class="hljs-number">1</span>)
+    ev = SparseArrays.spzeros(<span class="hljs-built_in">Int8</span>, edge_num, verts_num)
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:edge_num
+        ev[i, alphas[alphas_keys[i]]] = <span class="hljs-number">1</span>
+        ev[i, alphas[alphas_keys[i+<span class="hljs-number">1</span>]]] = <span class="hljs-number">1</span>
+    <span class="hljs-keyword">end</span>
+    <span class="hljs-keyword">return</span> verts, ev
+<span class="hljs-keyword">end</span>
+</code></pre><p>Si occupa della frammentazione dei bordi in EV usando l&#39;indice spaziale bigPI.</p>
+<p>1.4 <strong>Analisi per il miglioramento del codice</strong> </p>
+<p>Analizzando il codice nel dettaglio, è possibile evidenziare che in alcuni passi dell&#39;algoritmo è stato implementato il calcolo parallelo e distribuito. Infatti, nella funzione &quot;<em>planar_arrangement_1</em>&quot;, la frammentazione dei bordi può essere effettuata tramite il calcolo asincrono. </p>
+<p>Continuando l&#39;analisi del codice ed osservando accuratamente le dipendenze presenti risulta opportuno implementare modifiche con l&#39;obiettivo di migliorare scalabilità, modificabilità e prestazioni di porzioni dello stesso, riducendo l&#39;accoppiamento tra i moduli presenti fattorizzando il codice e continuando ad implementare forme di calcolo parallelo e distribuito. In particolare, alcune di queste modifiche dovranno coinvolgere il codice relativo alla funzione &quot;<em>merge_vertices!&quot;</em>, presentata in precedenza. Infatti, ad essa sono assegnate numerose <em>task</em> che possono essere suddivise in diverse sotto funzioni.</p>
+<ol>
+<li><h1 id="-studio-esecutivo-"><strong>STUDIO ESECUTIVO</strong></h1>
+</li>
+</ol>
+<p>All’interno di questo capitolo verrà trattato lo sviluppo del progetto nella sua fase principale, ovvero quella riguardante la messa in atto di tutte le modifiche introdotte nel capitolo precedente.</p>
+<p>Lo scopo principale è quello di migliorare le prestazioni dell’algoritmo preso in esame andando ad introdurre all’interno del codice porzioni che presentano la possibilità di essere eseguite in parallelo. Oltre a ciò, un secondo obiettivo è la re-fattorizzazione di alcune funzione, garantendo migliore scalabilità e modificabilità dei moduli interessati.</p>
+<p><strong>2.1 Calcolo Parallelo in Julia</strong></p>
+<p>Come introdotto nei paragrafi precedenti è stato deciso di migliorare le prestazioni dell’algoritmo usufruendo delle potenzialità garantite dal calcolo parallelo.
+Nei prossimi paragrafi verranno illustrate le possibili implementazioni del calcolo parallelo offerta dal linguaggio di programmazione Julia.</p>
+<p>2.1.1 <strong><em>Task</em> asincroni o coroutine</strong></p>
+<p>I task di Julia consentono di sospendere e riprendere i calcoli per l&#39;I/O, la gestione degli eventi e modelli simili. I task possono sincronizzarsi attraverso operazioni come <em>wait</em> e <em>fetch</em> e comunicare tramite canali. Pur non essendo di per sé un calcolo parallelo, Julia consente di programmare i <em>task</em> su più <em>thread</em>.</p>
+<p>2.1.2 <strong>Multithreading</strong></p>
+<p>Il <em>multithreading</em> di Julia offre la possibilità di programmare task simultaneamente su più di un <em>thread</em> o core della CPU, condividendo la memoria. Questo è di solito il modo più semplice per ottenere il parallelismo sul proprio PC o su un singolo grande server <em>multicore</em>.</p>
+<p>2.1.3 <strong>Elaborazione distribuita</strong></p>
+<p>il calcolo distribuito esegue più processi Julia con spazi di memoria separati. Questi possono trovarsi sullo stesso computer o su più computer. La libreria standard Distributed fornisce la possibilità di eseguire in remoto una funzione Julia. Con questo blocco di base, è possibile costruire molti tipi diversi di astrazioni di calcolo distribuito.</p>
+<p>2.1.4 <strong>Elaborazione su GPU</strong></p>
+<p>Il compilatore Julia GPU offre la possibilità di eseguire codice Julia in modo nativo sulle GPU. Esiste un ricco ecosistema di pacchetti Julia che puntano alle GPU.</p>
+<p> <strong>2.2 Analisi Codice</strong> </p>
+<p>Prima dell’attuazione delle modifiche è stata svolta un’analisi dell’algoritmo con l’obiettivo di misurarne i tempi di esecuzione e di individuare eventuali porzioni di codice che potessero rallentare notevolmente l’esecuzione dello stesso.</p>
+<p>In tal senso, Julia offre strumenti che possono aiutare a diagnosticare i problemi e a migliorare le prestazioni del codice. Per questa fase di studio dell’algoritmo sono stati usati: </p>
+<ol>
+<li>Profiling: La profilazione consente di misurare le prestazioni del codice in esecuzione e di identificare le linee che fungono da colli di bottiglia. Per la visualizzazione dei risulati è stato usato il pacchetto ProfileView [4]. (Figura 6)</li>
+<li>@time: Una macro che esegue un&#39;espressione, stampando il tempo di esecuzione, il numero di allocazioni e il numero totale di byte che l&#39;esecuzione ha causato, prima di restituire il valore dell&#39;espressione [5]. (Figura 7)</li>
+</ol>
+<p><img src="/images/Figura3.png" alt="Profiling"></p>
+<p>Figura 3: Risultato Profiling</p>
+<p><img src="/images/Figura4.png" alt="RisultatiTestIniziale"></p>
+<p>Figura 4: Risultati test iniziale</p>
+<p>2.3 <strong>Implementazione delle modifiche</strong> 
+All’interno dell’algoritmo è evidente una elevata presenza di cicli, molti dei quali annidati. Per questo motivo è stato scelto di utilizzare la tecnica del Multi-threading. Julia supporta i loop paralleli utilizzando la macro Threads.@threads. Questa macro viene apposta davanti a un ciclo for per indicare a Julia che il ciclo è una regione multi-thread. </p>
+<p>Lo spazio di iterazione viene suddiviso tra i thread, dopodiché ogni thread scrive il proprio ID thread nelle posizioni assegnate.<br>Prima di eseguire un programma Julia multithread, è necessario impostare il numero di thread. Questo puo essere impostato dalla linea di comando di Julia, utilizzando gli argomenti della riga di comando -t, o modificando la variabile d&#39;ambiente JULIA_NUM_THREADS.[6]</p>
+<p>A seguito delle modifiche sono stati eseguiti nuovamente i test ottenendo i risultati illustrati nella Figura 8.</p>
+<p><img src="/images/Figura5.png" alt="RisutatiTestFinale"></p>
+<p>Figura 5: Risultati test finale</p>
+<p>Osservando i tempi misurati prima e dopo delle modifiche si evince un miglioramento della prestazione di circa il 30%.</p>
+<p>2.4 <strong>Re-fattorizzazione</strong></p>
+<p>Come anticipato nei paragrafi sopra è stato scelto di aggiungere alcune nuove funzioni all’interno del codice così da ridurre le responsabilità di alcuni metodi già presenti nello stesso. Questa scelta implementativa ha coinvolto prevalentemente la funzione “<em>merge_vertices</em>”, il cui corpo al termine delle modifiche è risultato notevolemente piu leggibile. In particolare, le funzioni che sono state aggiunte al codice sono mergeCongruentVertices (Figura 9), mergeCongruentEdges (Figura 10), buildEdgeMap (Figura 11).  </p>
+<pre><code>function mergeCongruentVertices(vertsnum,newverts,kdtree,V,err=1e-4)
+    todelete = []
+    i = 1
+    for vi in 1:vertsnum
+        if !(vi in todelete)
+            nearvs = Lar.inrange(kdtree, V[vi, :], err)
+            newverts[nearvs] .= i
+            nearvs = setdiff(nearvs, vi)
+            todelete = union(todelete, nearvs)
+            i = i + 1
+        <span class="hljs-keyword">end</span>
+    <span class="hljs-keyword">end</span>
+    <span class="hljs-keyword">return</span> todelete,newverts
+<span class="hljs-keyword">end</span>
+
+<span class="hljs-keyword">function</span> mergeCongruentEdges(edgenum,newverts,EV)
+    edges = <span class="hljs-built_in">Array</span>{Tuple{<span class="hljs-built_in">Int</span>, <span class="hljs-built_in">Int</span>}, <span class="hljs-number">1</span>}(undef, edgenum)
+    oedges = <span class="hljs-built_in">Array</span>{Tuple{<span class="hljs-built_in">Int</span>, <span class="hljs-built_in">Int</span>}, <span class="hljs-number">1</span>}(undef, edgenum)
+    @<span class="hljs-keyword">sync</span> <span class="hljs-keyword">begin</span>
+        <span class="hljs-keyword">for</span> ei <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:edgenum
+            @async <span class="hljs-keyword">begin</span>
+                v1, v2 = EV[ei, :].nzind
+                edges[ei] = Tuple{<span class="hljs-built_in">Int</span>, <span class="hljs-built_in">Int</span>}(<span class="hljs-keyword">sort</span>([newverts[v1], newverts[v2]]))
+                oedges[ei] = Tuple{<span class="hljs-built_in">Int</span>, <span class="hljs-built_in">Int</span>}(<span class="hljs-keyword">sort</span>([v1, v2])) 
+            <span class="hljs-keyword">end</span>
+        <span class="hljs-keyword">end</span> 
+    <span class="hljs-keyword">end</span>
+    <span class="hljs-keyword">return</span> edges,oedges
+<span class="hljs-keyword">end</span>
+
+<span class="hljs-keyword">function</span> buildEdgeMap(nedges,nedgenum,nEV,etuple2idx,edge_map,edges)
+    <span class="hljs-keyword">for</span> ei <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:nedgenum
+        nEV[ei, <span class="hljs-keyword">collect</span>(nedges[ei])] .= <span class="hljs-number">1</span>
+        etuple2idx[nedges[ei]] = ei
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:<span class="hljs-keyword">length</span>(edge_map)
+        <span class="hljs-keyword">row</span> = edge_map[i]
+        <span class="hljs-keyword">row</span> = <span class="hljs-keyword">map</span>(x-&gt;edges[x], <span class="hljs-keyword">row</span>)
+        <span class="hljs-keyword">row</span> = filter(t-&gt;t[<span class="hljs-number">1</span>]!=t[<span class="hljs-number">2</span>], <span class="hljs-keyword">row</span>)
+        <span class="hljs-keyword">row</span> = <span class="hljs-keyword">map</span>(x-&gt;etuple2idx[x], <span class="hljs-keyword">row</span>)
+        edge_map[i] = <span class="hljs-keyword">row</span> 
+    <span class="hljs-keyword">end</span>        
+    <span class="hljs-keyword">return</span> edge_map,nEV
+<span class="hljs-keyword">end</span>
+</code></pre><h1 id="-bibliografia-"><strong>BIBLIOGRAFIA</strong></h1>
+<p>[1]: Julia doc: <a href="https://julialang.org/">https://julialang.org/</a></p>
+<p>[2]: ACM-TSAS-2020 Section on Topological gift wrapping (TGW) in 2D in particular 2.3, 2.4 </p>
+<p>[3]: CADJ-2021.pdf Section on Chains and Arrangements in particular 2.2. and A.1. Relevant matters (Algorithm 5)</p>
+<p>[4] Profiling:  <a href="https://docs.julialang.org/en/v1/manual/profile/">https://docs.julialang.org/en/v1/manual/profile/</a></p>
+<p>[5] <a href="&#x6d;&#97;&#105;&#x6c;&#116;&#111;&#58;&#66;&#97;&#115;&#101;&#46;&#x40;&#x74;&#105;&#x6d;&#x65;">&#66;&#97;&#115;&#101;&#46;&#x40;&#x74;&#105;&#x6d;&#x65;</a>: <a href="&#x6d;&#x61;&#105;&#108;&#x74;&#111;&#58;&#x68;&#116;&#116;&#112;&#x73;&#x3a;&#x2f;&#x2f;&#100;&#x6f;&#x63;&#x73;&#x2e;&#106;&#117;&#108;&#105;&#97;&#108;&#x61;&#110;&#x67;&#x2e;&#x6f;&#x72;&#x67;&#47;&#101;&#x6e;&#47;&#118;&#49;&#47;&#98;&#97;&#115;&#x65;&#x2f;&#98;&#97;&#x73;&#x65;&#47;&#x23;&#x42;&#x61;&#115;&#x65;&#x2e;&#x40;&#x74;&#105;&#x6d;&#x65;">&#x68;&#116;&#116;&#112;&#x73;&#x3a;&#x2f;&#x2f;&#100;&#x6f;&#x63;&#x73;&#x2e;&#106;&#117;&#108;&#105;&#97;&#108;&#x61;&#110;&#x67;&#x2e;&#x6f;&#x72;&#x67;&#47;&#101;&#x6e;&#47;&#118;&#49;&#47;&#98;&#97;&#115;&#x65;&#x2f;&#98;&#97;&#x73;&#x65;&#47;&#x23;&#x42;&#x61;&#115;&#x65;&#x2e;&#x40;&#x74;&#105;&#x6d;&#x65;</a></p>
+<p>[6] MultiThreading: <a href="&#109;&#97;&#105;&#x6c;&#116;&#x6f;&#x3a;&#x68;&#116;&#116;&#112;&#x73;&#58;&#47;&#x2f;&#100;&#x6f;&#99;&#115;&#x2e;&#x6a;&#x75;&#108;&#105;&#97;&#x6c;&#97;&#110;&#x67;&#x2e;&#x6f;&#114;&#x67;&#47;&#x65;&#x6e;&#x2f;&#118;&#49;&#47;&#x6d;&#x61;&#110;&#117;&#97;&#108;&#x2f;&#109;&#117;&#x6c;&#x74;&#105;&#x2d;&#116;&#x68;&#114;&#101;&#x61;&#100;&#105;&#x6e;&#103;&#x2f;&#x23;&#84;&#104;&#x65;&#45;&#64;&#116;&#104;&#114;&#x65;&#x61;&#100;&#x73;&#x2d;&#77;&#97;&#99;&#114;&#x6f;">&#x68;&#116;&#116;&#112;&#x73;&#58;&#47;&#x2f;&#100;&#x6f;&#99;&#115;&#x2e;&#x6a;&#x75;&#108;&#105;&#97;&#x6c;&#97;&#110;&#x67;&#x2e;&#x6f;&#114;&#x67;&#47;&#x65;&#x6e;&#x2f;&#118;&#49;&#47;&#x6d;&#x61;&#110;&#117;&#97;&#108;&#x2f;&#109;&#117;&#x6c;&#x74;&#105;&#x2d;&#116;&#x68;&#114;&#101;&#x61;&#100;&#105;&#x6e;&#103;&#x2f;&#x23;&#84;&#104;&#x65;&#45;&#64;&#116;&#104;&#114;&#x65;&#x61;&#100;&#x73;&#x2d;&#77;&#97;&#99;&#114;&#x6f;</a></p>
+</body></html>
